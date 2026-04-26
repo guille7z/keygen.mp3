@@ -1,48 +1,15 @@
-wip keygen chiptune music player
 
-obviously needs a lot of work but this is what i could cook in less than a day
+# keygen.mp3
 
-only works locally for now ;p
-<!-- # sv
+A (work in progress) music player for Chiptune music from those classic Keygen software! (Or any music in .mod, .xm, .s3m, .it formats really, I just felt inspired by [keygenmusic.tk](https://keygenmusic.tk/#) and wanted to make my own :'3)
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+![Hi](https://flavortown.hackclub.com/rails/active_storage/representations/proxy/eyJfcmFpbHMiOnsiZGF0YSI6MzEzODQ1LCJwdXIiOiJibG9iX2lkIn19--311bbf110e807821a2b6c83a1dcb7e4e5142f81b/eyJfcmFpbHMiOnsiZGF0YSI6eyJmb3JtYXQiOiJ3ZWJwIiwicmVzaXplX3RvX2xpbWl0IjpbMTYwMCw5MDBdLCJzYXZlciI6eyJzdHJpcCI6dHJ1ZSwicXVhbGl0eSI6NzV9fSwicHVyIjoidmFyaWF0aW9uIn19--3bc8a2c9d65e3b087c0c0b37dcfb642bb247bc73/Screenshot_20260426_022211.png)
 
-## Creating a project
+## AI Notice
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-pnpm dlx sv@0.15.1 create --template minimal --types ts --install pnpm keygen.mp3
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
--->
+This project uses AI in assistance to real human code, as in:
+- Cleaning up code
+- Reorganizing code
+- Fixing errors
+- *Some* additions
+- Making code better

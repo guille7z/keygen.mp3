@@ -27,6 +27,7 @@
 
   // Debug
   let doILookLikeIWantMetadata = $state(false)
+  let allowBroken = $state(false)
 
   // Song list
   const songs = [
@@ -60,8 +61,8 @@
     '/trackerfiles/dualtrax - orion spaceforce23.xm',
     '/trackerfiles/Dubmood - 3D Galax.xm',
     '/trackerfiles/Dubmood - Botkyrka Sidekickers.xm',
-    '/trackerfiles/Dubmood - Introchip %2314 BETAFLUX.XM',
-    '/trackerfiles/Dubmood - Paradox %233.xm',
+    '/trackerfiles/Dubmood - Introchip no. 14 BETAFLUX.XM',
+    '/trackerfiles/Dubmood - Paradox no. 3.xm',
     '/trackerfiles/falcon - spineless_.xm',
     '/trackerfiles/Fearofdark - Get A Brain Morans.xm',
     '/trackerfiles/Funky Fish - R2-D2.xm',
@@ -132,16 +133,26 @@
     '/trackerfiles/vince kaichan - ama no gawa.it',
   ]
 
-  // Extract display name from path (e.g. "4mat - rose.xm" → "4mat - rose")
+  // Extract song display name from path (e.g. "4mat - rose.xm" → "4mat - rose")
   function songLabel(path: string) {
-    return path.split('/').pop()?.replace(/\.[^.]+$/, '') ?? path
+    return path.split('/').pop()?.replace(/\.[^.]+$/, '') ?? path // yeah i dont understand any of this this is ai assisted :')
+  }
+  
+  // Extract song artist name from title. They werent in the metadata
+  function songArtist(path: string) {
+    return path.split('/').pop()?.replace(/\.[^.]+$/, '').split(' - ')[0] ?? path
+  }
+
+  function songTitle(path: string) {
+    return path.split('/').pop()?.replace(/\.[^.]+$/, '').split(' - ').slice(1).join(' - ') ?? path
   }
 
   let selectedSong = $state(songs[0])
 
   // Derived
   let isPlaying = $derived(() => initialized && !errorMsg)
-  let currentTitle = $derived(() => (metadata as any)?.title ?? '')
+  //let currentTitle = $derived(() => (metadata as any)?.title ?? '')
+  let currentArtist = $derived(() => (metadata as any)?.artist ?? '')
 
   async function loadDependencies() {
     const mod = await import('https://drsnuggles.github.io/chiptune/chiptune3.js')
@@ -223,11 +234,11 @@
     <div class="player-row">
         <div class="song-info">
         {#if finallyPlayingSong}
-            <h3>{currentTitle() || songLabel(selectedSong)}</h3>
+            <h3>{songTitle(selectedSong)}</h3>
+            <p class="song-author">{currentArtist() || songArtist(selectedSong)}</p>
         {:else}
             <h3>No song loaded</h3>
         {/if}
-        <p class="song-author">???</p>
         </div>
 
         <div class="player-controls">
@@ -292,7 +303,7 @@
       </label>
     </fieldset>
   </section>
-
+  
   {#if doILookLikeIWantMetadata}
   <section>
     <fieldset>
