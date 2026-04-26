@@ -1,6 +1,8 @@
 wip keygen chiptune music player
 
 obviously needs a lot of work but this is what i could cook in less than a day
+
+only tested locally :p
 <!-- # sv
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
