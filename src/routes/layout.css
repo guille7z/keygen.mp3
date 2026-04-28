@@ -35,6 +35,16 @@
  --sidebar-accent-foreground: oklch(0.205 0 0);
  --sidebar-border: oklch(0.922 0 0);
  --sidebar-ring: oklch(0.708 0 0);
+
+ /* player tokens */
+ --player-accent: #46ac61;
+ --player-accent-light: #6dd589;
+ --player-bg: #171717;
+ --player-track: #3f3f46;
+ --player-border: #27272a;
+ --player-text-muted: #6b7280;
+ --player-text-dim: #52525b;
+ --player-shell-bg: #333;
 }
  
 .dark {
