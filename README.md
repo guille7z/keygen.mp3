@@ -5,7 +5,7 @@ A (work in progress) music player for Chiptune music from those classic Keygen s
 
 ![Hi](.github/hi.png)
 
-I'm aware that the UI is... a bit small. On desktops I'd suggest using 150% zoom in the meantime
+I'm aware that the UI is... a bit small. On desktops I'd suggest using 160-190% zoom in the meantime
 
 ## Credits
 
@@ -18,11 +18,4 @@ I'm aware that the UI is... a bit small. On desktops I'd suggest using 150% zoom
 
 ![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBRbjOS0SuodkQ7-m4EnqowjHlN-o1RCtZng&s)
 
-This project uses AI in assistance to real human code, as in:
-- Cleaning up code
-- Reorganizing code
-- Fixing errors
-- *Some* additions
-- Making code better
-
-ill try to rewrite without ai at some point trust
+This project uses AI in assistance to real human code: for bug-fixing, helping understand undocumented libraries and some assistance with some new additions.

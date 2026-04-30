@@ -1,18 +1,16 @@
 <script lang="ts">
+  import { songs } from '../lib/songs'
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
-  import { Volume2, SkipBack, SkipForward, Play, Pause, Clock, Music2 } from '@lucide/svelte'
+  import { Volume2, SkipBack, SkipForward, Play, Pause } from '@lucide/svelte'
+  import { Separator } from "$lib/components/ui/separator/index.js"
+  //import { Slider } from "$lib/components/ui/slider/index.js"
+  import { Button } from "$lib/components/ui/button/index.js"
+  import * as Alert from "$lib/components/ui/alert/index.js";
+  import { ModeWatcher } from "mode-watcher"
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js"
   import '../app.css'
-  import { songs } from '../lib/songs' // Extracted song list
 
-  // Constants
-  const FADE_DURATION = 300 // ms — smoother visual transition
-  const SLIDER_MIN = 0
-  const SLIDER_MAX = 2
-  const SLIDER_STEP = 0.001
-  const PROGRESS_EPSILON = 0.01 // for floating-point comparison
-
-  // Type defs
   interface ChiptunePlayer {
     onInitialized: (cb: () => void) => void
     onEnded: (cb: () => void) => void
@@ -28,48 +26,25 @@
     setRepeatCount: (n: number) => void
   }
 
-  interface ProgressData {
-    pos?: number
-  }
-
-  interface Metadata {
-    dur?: number
-  }
-
-  let { children } = $props()
-
-  // states
   let chiptune = $state<ChiptunePlayer | null>(null)
   let initialized = $state(false)
   let showAudioModal = $state(true)
   let isLoaded = $state(false)
   let isPaused = $state(false)
   let isDragging = $state(false)
-  let showSliderPanel = $state(false)
   let playerError = $state<string | null>(null)
 
-  let progress = $state(0)
+  let pos = $state(0)
   let duration = $state(0)
-  let volume = $state(1)
-  let pitch = $state(1)
-  let tempo = $state(1)
 
   let selectedSong = $state(songs[0])
 
-  // Helpers
-
-  //format seconds into M:SS string
   function fmt(s: number): string {
     if (!isFinite(s) || s < 0) s = 0
     const m = Math.floor(s / 60)
     const sec = Math.floor(s % 60)
     return `${m}:${sec.toString().padStart(2, '0')}`
   }
-
-  //convert slider value (0–2) to percentage string
-  
-  const toPercentage = (value: number): string => 
-    `${Math.round((value / SLIDER_MAX) * 100)}%`
 
   function basename(path: string): string {
     return path.split('/').pop()?.replace(/\.[^.]+$/, '') ?? path
@@ -84,25 +59,11 @@
     return basename(path).split(' - ')[0]
   }
 
-  // Derived values
-  let timeElapsed = $derived(fmt(progress))
-  let timeLeft = $derived(duration > 0 ? fmt(duration - progress) : '-0:00')
-  let volPct = $derived(toPercentage(volume))
-  let pitchPct = $derived(toPercentage(pitch))
-  let tempoPct = $derived(toPercentage(tempo))
-
-  // Core
-  function resetStuff(): void {
-    progress = 0
-    duration = 0
-    pitch = 1
-    tempo = 1
-    isPaused = false
-    playerError = null
-    
-    chiptune?.setPitch(1)
-    chiptune?.setTempo(1)
-  }
+  let timeElapsed = $derived(fmt(pos))
+  let timeLeft = $derived(duration > 0 ? fmt(duration - pos) : '0:00')
+  
+  // Throttle progress — onProgress fires at ~60fps, 250ms is plenty for a progress bar - claude
+  let lastProgressUpdate = 0
 
   async function initPlayer(): Promise<void> {
     if (chiptune) return
@@ -112,38 +73,43 @@
       const chip = await import('https://drsnuggles.github.io/chiptune/chiptune3.min.js')
       chiptune = new chip.ChiptuneJsPlayer()
 
-      chiptune.onInitialized(() => { 
+      chiptune.onInitialized(() => {
         initialized = true
         chiptune?.setRepeatCount(0)
       })
-      chiptune.onEnded(() => { 
+
+      chiptune.onEnded(() => {
         chiptune?.stop()
-        isPaused = false 
+        isPaused = false
+        isLoaded = false
+        pos = 0
       })
-      chiptune.onMetadata((meta: Metadata) => { 
-        if (isFinite(meta.dur ?? 0)) duration = meta.dur ?? 0 
+
+      chiptune.onMetadata((meta) => {
+        if (isFinite(meta.dur ?? 0)) duration = meta.dur ?? 0
       })
-      
-      chiptune.onProgress((data: ProgressData) => {
-        if (!isDragging && isFinite(data.pos ?? 0)) {
-          progress = data.pos ?? 0
-          
-          // Use epsilon comparison for floating-point safety
-          if (duration > 0 && progress >= duration - PROGRESS_EPSILON) {
-            next()
-          }
-        }
+
+      chiptune.onProgress((data) => {
+        if (isDragging || !isFinite(data.pos ?? 0)) return
+        const now = performance.now()
+        if (now - lastProgressUpdate < 250) return
+        lastProgressUpdate = now
+        pos = data.pos!
       })
     } catch (err) {
       console.error('Failed to initialize chiptune player:', err)
       playerError = 'Audio engine failed to load'
-      showAudioModal = true
+      showAudioModal = false
     }
   }
 
   function load(url: string): void {
-    resetStuff()
-    chiptune?.load(url)
+    if (!initialized || !chiptune) return
+    chiptune.stop()
+    pos = 0
+    duration = 0
+    isPaused = false
+    chiptune.load(url)
     isLoaded = true
   }
 
@@ -164,167 +130,165 @@
     if (initialized) load(selectedSong)
   }
 
-  // Event Handlers
-  function onSeek(e: Event): void { //seek name comes from the original chiptune js demo idek why its called that
+  function onSeek(v: number[]): void {
     isDragging = true
-    const target = e.target as HTMLInputElement
-    const val = target?.valueAsNumber ?? 0
-    progress = val
-    chiptune?.setPos(val)
+    pos = v[0]
   }
 
-  function onSeekEnd(): void {
+  function onSeekEnd(v: number[]): void {
     isDragging = false
-  }
-
-  function onVolume(e: Event): void {
-    const target = e.target as HTMLInputElement
-    volume = target?.valueAsNumber ?? 1
-    chiptune?.setVol(volume)
-  }
-
-  function onPitch(e: Event): void {
-    const target = e.target as HTMLInputElement
-    pitch = target?.valueAsNumber ?? 1
-    chiptune?.setPitch(pitch)
-  }
-
-  function onTempo(e: Event): void {
-    const target = e.target as HTMLInputElement
-    tempo = target?.valueAsNumber ?? 1
-    chiptune?.setTempo(tempo)
-  }
-
-  function onSongSelect(e: Event): void {
-    const target = e.target as HTMLSelectElement
-    selectedSong = target?.value ?? songs[0]
-    if (initialized) load(selectedSong)
+    pos = v[0]
+    chiptune?.setPos(v[0])
   }
 
   function onFirstInteraction(): void {
     initPlayer()
-    ;['keydown', 'click', 'touchstart'].forEach(evt => 
+    ;['keydown', 'click', 'touchstart'].forEach(evt =>
       window.removeEventListener(evt, onFirstInteraction)
     )
   }
+
+  onMount(() => {
+    ;['click', 'touchstart', 'keydown'].forEach(e =>
+      window.addEventListener(e, onFirstInteraction, { once: true })
+    )
+  })
 </script>
 
-{#if playerError}
-  <div class="error-banner">{playerError}</div>
-{/if}
-
-{#if showAudioModal} <!-- i had to make the modal pretty because i couldnt get fucking rid of it ffs -->
-  <div 
-    class="audio-modal" 
+{#if showAudioModal}
+  <div
+    class="audio-modal"
     onclick={onFirstInteraction}
-    out:fade={{ duration: FADE_DURATION }}
+    out:fade={{ duration: 300 }}
   >
     <div class="audio-modal-inner">
       <Volume2 size={36} color="rgba(255,255,255,0.45)" />
-      <p>Click anywhere to enable audio</p>
+      <p><i>click</i> anywhere to enable audio</p>
     </div>
   </div>
 {/if}
 
-<main class="player-shell">
-  <div class="player-stage">
-    <div class="player-card" class:panel-open={showSliderPanel}>
-
-      <div class="song-info">
-        <h3 class="song-title">{isLoaded ? displayTitle(selectedSong) : 'untitled'}</h3>
-        <p class="song-artist">{isLoaded ? displayArtist(selectedSong) : 'anonymous'}</p>
+{#if playerError}
+    <div class="audio-modal">
+      <div class="audio-modal-inner">
+        <p>fuck: {playerError}</p>
       </div>
+  </div>
+{/if}
 
-      <div class="seek-wrap">
-        <input
-          type="range"
-          min={SLIDER_MIN}
-          max={duration || 1}
-          step={SLIDER_STEP}
-          value={progress}
-          oninput={onSeek}
-          onpointerup={onSeekEnd}
-          ontouchend={onSeekEnd}
-          disabled={!initialized || !duration}
-          class="seek-slider"
-        />
-        <div class="seek-times">
-          <span>{timeElapsed}</span>
-          <span>{timeLeft}</span>
-        </div>
-      </div>
+<main class="min-h-screen flex items-center justify-center bg-background p-8 font-sans">
+  <div class="w-[300px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg">
+    <div class="text-center mb-3.5">
+      <h3 class="text-[0.95rem] font-semibold truncate">
+        {isLoaded ? displayTitle(selectedSong) : 'untitled'}
+      </h3>
+      <p class="text-[0.75rem] text-muted-foreground mt-0.5 truncate">
+        {isLoaded ? displayArtist(selectedSong) : 'anonymous'}
+      </p>
+    </div>
 
-      <div class="controls-row">
-        <div class="transport">
-          <button class="icon-btn clickeroonie" onclick={prev} disabled={!initialized}>
-            <SkipBack size={18} fill="currentColor" />
-          </button>
-          <button
-            class="play-btn clickeroonie"
-            onclick={() => isLoaded ? togglePause() : load(selectedSong)}
+    <input
+      type="range"
+      min={0}
+      max={duration || 1}
+      step={0.1}
+      value={pos}
+      oninput={(e) => {
+        isDragging = true
+        pos = (e.target as HTMLInputElement).valueAsNumber
+      }}
+      onpointerup={(e) => {
+        isDragging = false
+        const v = (e.target as HTMLInputElement).valueAsNumber
+        pos = v
+        chiptune?.setPos(v)
+      }}
+      ontouchend={(e) => {
+        isDragging = false
+        const v = (e.target as HTMLInputElement).valueAsNumber
+        pos = v
+        chiptune?.setPos(v)
+      }}
+      disabled={!initialized || !duration}
+      class="w-full seek-slider"
+    />
+
+    <div class="flex justify-between mt-1.5 text-[0.7rem] tabular-nums font-mono text-muted-foreground">
+      <span>{timeElapsed}</span>
+      <span>-{timeLeft}</span>
+    </div>
+
+    <div class="flex items-center justify-center gap-2 mt-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        class="rounded-full"
+        onclick={prev}
+        disabled={!initialized}
+      >
+        <SkipBack size={18} fill="currentColor" />
+      </Button>
+
+      <Button
+        onclick={() => isLoaded ? togglePause() : load(selectedSong)}
+        size="icon"
+        class="rounded-full w-[46px] h-[46px]"
+        disabled={!initialized}
+      >
+        {#if isPaused || !isLoaded}
+          <Play size={20} fill="currentColor" />
+        {:else}
+          <Pause size={20} fill="currentColor" />
+        {/if}
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        class="rounded-full"
+        onclick={next}
+        disabled={!initialized}
+      >
+        <SkipForward size={18} fill="currentColor" />
+      </Button>
+    </div>
+
+    <div class="my-4">
+      <Separator />
+    </div>
+
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger>
+        {#snippet child({ props })}
+          <Button
+            {...props}
+            variant="outline"
+            class="w-full justify-between text-left font-normal"
             disabled={!initialized}
           >
-            {#if isPaused || !isLoaded}
-              <Play size={20} fill="currentColor" />
-            {:else}
-              <Pause size={20} fill="currentColor" />
-            {/if}
-          </button>
-          <button class="icon-btn clickeroonie" onclick={next} disabled={!initialized}>
-            <SkipForward size={18} fill="currentColor" />
-          </button>
-        </div>
-        
-        <button
-          class="icon-btn vol-toggle clickeroonie"
-          class:active={showSliderPanel}
-          onclick={() => showSliderPanel = !showSliderPanel}
-        >
-          <Volume2 size={18} />
-        </button>
-      </div>
+            <span class="truncate">{basename(selectedSong)}</span>
+            <span class="text-muted-foreground text-xs">▼</span>
+          </Button>
+        {/snippet}
+      </DropdownMenu.Trigger>
 
-      <div class="song-select-wrap">
-        <select value={selectedSong} onchange={onSongSelect} disabled={!initialized} class="song-select">
-          {#each songs as path}
-            <option value={path}>{basename(path)}</option>
-          {/each}
-        </select>
-      </div>
+      <DropdownMenu.Content
+        class="w-[--radix-dropdown-menu-trigger-width] max-h-60 overflow-auto"
+        align="start"
+      >
+        {#each songs as path}
+          <DropdownMenu.Item
+            class="truncate cursor-pointer"
+            onclick={() => {
+              selectedSong = path
+              load(path)
+            }}
+          >
+            {basename(path)}
+          </DropdownMenu.Item>
+        {/each}
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
 
-    </div>
-
-    <div class="slider-panel" class:visible={showSliderPanel}>
-      <div class="sliders-inner">
-        <div class="vslider-col">
-          <span class="vslider-pct">{volPct}</span>
-          <input type="range" min={SLIDER_MIN} max={SLIDER_MAX} step={SLIDER_STEP}
-            value={volume} oninput={onVolume}
-            disabled={!initialized} class="vslider" />
-          <span class="vslider-icon"><Volume2 size={14} color="#6dd589" /></span>
-          <span class="vslider-label">Vol</span>
-        </div>
-
-        <div class="vslider-col">
-          <span class="vslider-pct">{pitchPct}</span>
-          <input type="range" min={SLIDER_MIN} max={SLIDER_MAX} step={SLIDER_STEP}
-            value={pitch} oninput={onPitch}
-            disabled={!initialized} class="vslider" />
-          <span class="vslider-icon"><Music2 size={14} color="#6dd589" /></span>
-          <span class="vslider-label">Pitch</span>
-        </div>
-
-        <div class="vslider-col">
-          <span class="vslider-pct">{tempoPct}</span>
-          <input type="range" min={SLIDER_MIN} max={SLIDER_MAX} step={SLIDER_STEP}
-            value={tempo} oninput={onTempo}
-            disabled={!initialized} class="vslider" />
-          <span class="vslider-icon"><Clock size={14} color="#6dd589" /></span>
-          <span class="vslider-label">Tempo</span>
-        </div>
-      </div>
-    </div>
   </div>
 </main>
-
-{children}
