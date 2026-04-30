@@ -3,7 +3,7 @@
 
 A (work in progress) music player for Chiptune music from those classic Keygen software! (Or any music in .mod, .xm, .s3m, .it formats really, I just felt inspired by [keygenmusic.tk](https://keygenmusic.tk/#) and wanted to make my own :'3)
 
-![Hi](.github/hi.png)
+![Hi](.github/pretty.png)
 
 I'm aware that the UI is... a bit small. On desktops I'd suggest using 160-190% zoom in the meantime
 
