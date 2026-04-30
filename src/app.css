@@ -1,5 +1,14 @@
+.cur-pointer {
+  cursor: pointer;
+}
+
 .seek-slider {
   accent-color: var(--player-accent);
+  cursor: pointer;
+}
+
+.seek-slider:disabled {
+  cursor: auto;
 }
 
 .audio-modal {

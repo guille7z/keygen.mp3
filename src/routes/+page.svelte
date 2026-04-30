@@ -180,10 +180,10 @@
   <div class="w-[300px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg">
     <div class="text-center mb-3.5">
       <h3 class="text-[0.95rem] font-semibold truncate">
-        {isLoaded ? displayTitle(selectedSong) : 'untitled'}
+        {isLoaded ? displayTitle(selectedSong) : '???'}
       </h3>
       <p class="text-[0.75rem] text-muted-foreground mt-0.5 truncate">
-        {isLoaded ? displayArtist(selectedSong) : 'anonymous'}
+        {isLoaded ? displayArtist(selectedSong) : '???'}
       </p>
     </div>
 
@@ -222,7 +222,7 @@
       <Button
         variant="ghost"
         size="icon"
-        class="rounded-full"
+        class="rounded-full cur-pointer"
         onclick={prev}
         disabled={!initialized}
       >
@@ -232,7 +232,7 @@
       <Button
         onclick={() => isLoaded ? togglePause() : load(selectedSong)}
         size="icon"
-        class="rounded-full w-[46px] h-[46px]"
+        class="rounded-full w-[46px] h-[46px] cur-pointer"
         disabled={!initialized}
       >
         {#if isPaused || !isLoaded}
@@ -245,7 +245,7 @@
       <Button
         variant="ghost"
         size="icon"
-        class="rounded-full"
+        class="rounded-full cur-pointer"
         onclick={next}
         disabled={!initialized}
       >
@@ -263,7 +263,7 @@
           <Button
             {...props}
             variant="outline"
-            class="w-full justify-between text-left font-normal"
+            class="w-full justify-between text-left font-normal cur-pointer"
             disabled={!initialized}
           >
             <span class="truncate">{basename(selectedSong)}</span>
