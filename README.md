@@ -10,7 +10,8 @@ I'm aware that the UI is... a bit small. On desktops I'd suggest using 140% zoom
 ## Credits
 
 - DrSnuggles/chiptune ([github.com](https://github.com/DrSnuggles/chiptune))
-- Essential Keygen Music ([archive.org](https://archive.org/details/essential-keygen-music))
+- Essential Keygen Music by RobWelch ([archive.org](https://archive.org/details/essential-keygen-music))
+- sxiii/keygen-music ([github.com](https://github.com/sxiii/keygen-music/))
 
 ---
 
