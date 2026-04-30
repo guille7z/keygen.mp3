@@ -5,7 +5,7 @@ A (work in progress) music player for Chiptune music from those classic Keygen s
 
 ![Hi](.github/pretty.png)
 
-I'm aware that the UI is... a bit small. On desktops I'd suggest using 160-190% zoom in the meantime
+I'm aware that the UI is... a bit small. On desktops I'd suggest using 140% zoom in the meantime
 
 ## Credits
 
