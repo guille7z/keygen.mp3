@@ -5,13 +5,18 @@ A (work in progress) music player for Chiptune music from those classic Keygen s
 
 ![Hi](.github/pretty.png)
 
-I'm aware that the UI is... a bit small. On desktops I'd suggest using 140% zoom in the meantime
+## Notes
+- I'm aware that the UI is... a bit small. On desktops I'd suggest using 140% zoom in the meantime
+- Also... the progress bar only looks 100% right on Firefox: Chrome is weird... i cant seem to get the progressed part of the range input to be green (ahem, `var(--player-accent)`) for some reason :p
+- Uhhhh some songs wont play properly i have to fix that
+- ik the ui is not 100% smooth but its good enough
 
 ## Credits
 
-- DrSnuggles/chiptune ([github.com](https://github.com/DrSnuggles/chiptune))
-- Essential Keygen Music by RobWelch ([archive.org](https://archive.org/details/essential-keygen-music))
-- sxiii/keygen-music ([github.com](https://github.com/sxiii/keygen-music/))
+- DrSnuggles/chiptune ([github.com](https://github.com/DrSnuggles/chiptune)) - chiptune library, essential pillar of the app
+- Essential Keygen Music by RobWelch ([archive.org](https://archive.org/details/essential-keygen-music)) - keygen library #1
+- sxiii/keygen-music ([github.com](https://github.com/sxiii/keygen-music/)) - keygen library #2
+- freeCodeCamp/coderadio-client ([github.com](https://github.com/freeCodeCamp/coderadio-client)) - visualizer port derived from here
 
 ---
 

@@ -2,15 +2,6 @@
   cursor: pointer;
 }
 
-.seek-slider {
-  accent-color: var(--player-accent);
-  cursor: pointer;
-}
-
-.seek-slider:disabled {
-  cursor: auto;
-}
-
 .audio-modal {
   position: fixed;
   inset: 0;
@@ -33,4 +24,62 @@
   font-size: 0.8rem;
   letter-spacing: 0.1em;
   color: rgba(255, 255, 255, 0.6);
+}
+
+.visualizer {
+/*  opacity: 25%;*/
+  width: 100%;
+  height: 64px;
+  --vis-fill: var(--player-accent);
+}
+  
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.progress-bar {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--color-border-secondary, rgba(128,128,128,0.3));
+  cursor: pointer;
+  outline: none;
+}
+
+.progress-bar:disabled {
+  cursor: auto;
+  opacity: 0.4;
+}
+
+.progress-bar::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: var(--player-accent);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.progress-bar::-moz-range-progress {
+  background: var(--player-accent);
+  height: 3px;
+  border-radius: 10px;
+}
+
+.progress-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+
+  background: var(--player-accent);
+  cursor: pointer;
 }
