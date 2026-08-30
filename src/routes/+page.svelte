@@ -10,6 +10,7 @@
   import '../app.css'
   import Visualizer from '$lib/components/Visualizer.svelte'
   import { backInOut, backOut } from "svelte/easing";
+  import { device } from '$lib/device.svelte'
 
   interface ChiptunePlayer {
     onInitialized: (cb: () => void) => void
@@ -328,13 +329,6 @@
 
     <!-- Transport -->
     <div class="relative flex items-center justify-center gap-2 mt-2">
-      <Button
-        variant="ghost" size="icon" class="rounded-full absolute left-0"
-        onclick={() => activePanel = activePanel === 'settings' ? null : 'settings'}
-      >
-        <Cog size={18} />
-      </Button>
-
       <Button variant="ghost" size="icon" class="rounded-full" onclick={prev} disabled={!initialized}>
         <SkipBack size={18} fill="currentColor" />
       </Button>
@@ -351,12 +345,14 @@
         <SkipForward size={18} fill="currentColor" />
       </Button>
 
+      {#if device.isComputer}
       <Button
         variant="ghost" size="icon" class="rounded-full absolute right-0"
         onclick={() => activePanel = activePanel === 'audio' ? null : 'audio'}
       >
         <Volume2 size={18} />
       </Button>
+      {/if}
     </div>
 
     <!-- Shuffle / Loop -->
