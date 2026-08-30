@@ -1,7 +1,3 @@
-.cur-pointer {
-  cursor: pointer;
-}
-
 .audio-modal {
   position: fixed;
   inset: 0;

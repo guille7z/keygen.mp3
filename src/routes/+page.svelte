@@ -6,11 +6,11 @@
   import { Separator } from "$lib/components/ui/separator/index.js"
   import { Button } from "$lib/components/ui/button/index.js"
   import { Slider } from "$lib/components/ui/slider/index.js";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js"
+  import * as NativeSelect from "$lib/components/ui/native-select/index.js";
   import '../app.css'
   import Visualizer from '$lib/components/Visualizer.svelte'
   import { backInOut, backOut } from "svelte/easing";
-  
+
   interface ChiptunePlayer {
     onInitialized: (cb: () => void) => void
     onEnded: (cb: () => void) => void
@@ -53,25 +53,17 @@
 
   let analyser = $state<AnalyserNode | null>(null)
 
-  const SlideInLeft = () => ({
+  const slideIn = (from: number) => () => ({
     css: (t: number) => {
-      const x = (1 - t) * -20;
-      const scale = 0.98 + t * 0.02;
+      const x = (1 - t) * from
+      const scale = 0.98 + t * 0.02
       return `transform: translateX(${x}px) scale(${scale}); opacity: ${t};`;
     },
     easing: backOut,
     duration: 300,
   });
-
-  const SlideInRight = () => ({
-    css: (t: number) => {
-      const x = (1 - t) * 20;
-      const scale = 0.98 + t * 0.02;
-      return `transform: translateX(${x}px) scale(${scale}); opacity: ${t};`;
-    },
-    easing: backOut,
-    duration: 300,
-  });
+  const SlideInLeft = slideIn(-20)
+  const SlideInRight = slideIn(20)
 
   function fmt(s: number): string {
     if (!isFinite(s) || s < 0) s = 0
@@ -318,12 +310,6 @@
         pos = v
         chiptune?.setPos(v)
       }}
-      ontouchend={(e) => {
-        isDragging = false
-        const v = (e.target as HTMLInputElement).valueAsNumber
-        pos = v
-        chiptune?.setPos(v)
-      }}
       disabled={!initialized || !duration}
       class="w-full progress-bar"
     />
@@ -388,35 +374,17 @@
 
     <Separator class="my-4" />
 
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
-        {#snippet child({ props })}
-          <Button
-            {...props}
-            variant="outline"
-            class="w-full justify-between text-left font-normal cursor-pointer"
-            disabled={!initialized}
-          >
-            <span class="truncate">{basename(selectedSong)}</span>
-            <ChevronDown />
-          </Button>
-        {/snippet}
-      </DropdownMenu.Trigger>
-
-      <DropdownMenu.Content
-        class="w-[--radix-dropdown-menu-trigger-width] max-h-60 overflow-auto"
-        align="start"
-      >
-        {#each songs as path}
-          <DropdownMenu.Item
-            class="truncate cursor-pointer"
-            onclick={() => { selectedSong = path; load(path) }}
-          >
-            {basename(path)}
-          </DropdownMenu.Item>
-        {/each}
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+    <NativeSelect.Root
+      bind:value={selectedSong}
+      onchange={() => load(selectedSong)}
+      disabled={!initialized}
+    >
+          {#each songs as path}
+            <NativeSelect.Option value={path}>
+              {basename(path)}
+            </NativeSelect.Option>
+          {/each}
+    </NativeSelect.Root>
   </div>
 
   <!-- Audio Parameters Panel (RIGHT) -->
@@ -430,7 +398,6 @@
       <div class="flex items-stretch justify-around h-full">
         {#each [ // TODO: replace this part's labels with lucide icons somehow (btw thx claude :3)
           { label: '🔈',   val: volume, set: (v: number) => { volume = v; applyVolume(v) } },
-          //{ label: '🐁', val: pitch,  set: (v: number) => { pitch  = v; applyPitch(v)  } }, // doesnt work properly, tbd
           { label: '⏱️', val: tempo,  set: (v: number) => { tempo  = v; applyTempo(v)  } },
         ] as param}
           <div class="flex flex-col items-center justify-between py-1">
@@ -447,5 +414,4 @@
       </div>
     </div>
   {/if}
-
 </main>
