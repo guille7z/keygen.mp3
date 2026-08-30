@@ -2,7 +2,7 @@
   import { songs } from '../lib/songs'
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
-  import { Volume2, SkipBack, SkipForward, Play, Pause, ChevronDown, Cog, Shuffle, Repeat } from '@lucide/svelte'
+  import { Volume2, SkipBack, SkipForward, Play, Pause, ChevronDown, Cog, Shuffle, Repeat, Clock, VolumeX } from '@lucide/svelte'
   import { Separator } from "$lib/components/ui/separator/index.js"
   import { Button } from "$lib/components/ui/button/index.js"
   import { Slider } from "$lib/components/ui/slider/index.js";
@@ -108,6 +108,7 @@
 
   let timeElapsed = $derived(fmt(pos))
   let timeLeft = $derived(duration > 0 ? fmt(duration - pos) : '0:00')
+  let progressPct = $derived(duration > 0 ? (pos / duration) * 100 : 0)
   let lastProgressUpdate = 0 // not reactive - throttle timestamp
 
   // pitch: 0–100 → -12 to +12 semitones (50 = no shift)
@@ -261,22 +262,27 @@
 <main class="min-h-screen flex items-center justify-center bg-background p-8 font-sans">
 
   <!-- Settings Panel (LEFT) -->
-  {#if activePanel === 'settings'}
-    <div
-      class="w-[300px] h-[325px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg flex-shrink-0"
-      in:SlideInRight
-      out:SlideInRight
-    >
-      <h1>"<b>Settings</b>" (not really)</h1>
-      <br />
-      <p>i didnt really think this one out i just wanted something here lol</p>
+  <div
+    class="flex overflow-hidden flex-shrink-0 transition-[width] duration-300 ease-out"
+    style:width={activePanel === 'settings' ? '316px' : '0px'}
+  >
+    {#if activePanel === 'settings'}
+      <div
+        class="w-[300px] h-[325px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg flex-shrink-0"
+        in:SlideInRight
+        out:SlideInRight
+      >
+        <h1>"<b>Settings</b>" (not really)</h1>
+        <br />
+        <p>i didnt really think this one out i just wanted something here lol</p>
 
-      <Separator class="my-4" />
+        <Separator class="my-4" />
 
-      <a href="https://raw.githubusercontent.com/guille7z/keygen.mp3/refs/heads/master/LICENSE">mit licensed</a>
-    </div>
-    <div class="w-4 flex-shrink-0"></div>
-  {/if}
+        <a href="https://raw.githubusercontent.com/guille7z/keygen.mp3/refs/heads/master/LICENSE">mit licensed</a>
+      </div>
+      <div class="w-4 flex-shrink-0"></div>
+    {/if}
+  </div>
 
   <!-- MAIN PLAYER CARD -->
   <div class="w-[300px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg flex-shrink-0">
@@ -311,6 +317,7 @@
         chiptune?.setPos(v)
       }}
       disabled={!initialized || !duration}
+      style:--pct={`${progressPct}%`}
       class="w-full progress-bar"
     />
 
@@ -388,30 +395,40 @@
   </div>
 
   <!-- Audio Parameters Panel (RIGHT) -->
-  {#if activePanel === 'audio'}
-    <div class="w-4 flex-shrink-0"></div>
-    <div
-      class="w-[150px] h-[250px] bg-card text-card-foreground rounded-2xl p-[18px_12px_14px] shadow-lg flex-shrink-0"
-      in:SlideInLeft
-      out:SlideInLeft
-    >
-      <div class="flex items-stretch justify-around h-full">
-        {#each [ // TODO: replace this part's labels with lucide icons somehow (btw thx claude :3)
-          { label: '🔈',   val: volume, set: (v: number) => { volume = v; applyVolume(v) } },
-          { label: '⏱️', val: tempo,  set: (v: number) => { tempo  = v; applyTempo(v)  } },
-        ] as param}
+  <div
+    class="flex overflow-hidden flex-shrink-0 transition-[width] duration-300 ease-out"
+    style:width={activePanel === 'audio' ? '166px' : '0px'}
+  >
+    {#if activePanel === 'audio'}
+      <div class="w-4 flex-shrink-0"></div>
+      <div
+        class="w-[150px] h-[250px] bg-card text-card-foreground rounded-2xl p-[18px_12px_14px] shadow-lg flex-shrink-0"
+        in:SlideInLeft
+        out:SlideInLeft
+      >
+        <div class="flex items-stretch justify-around h-full">
           <div class="flex flex-col items-center justify-between py-1">
             <Slider
               type="single"
-              value={param.val}
+              value={volume}
               min={0} max={100} step={1}
               orientation="vertical"
-              onValueChange={param.set}
+              onValueChange={(v) => { volume = v; applyVolume(v) }}
             />
-            <span class="text-[0.6rem] text-muted-foreground mt-2">{param.label}</span>
+            <Volume2 class="mt-2.5" size=16/>
           </div>
-        {/each}
+          <div class="flex flex-col items-center justify-between py-1">
+            <Slider
+              type="single"
+              value={tempo}
+              min={0} max={100} step={1}
+              orientation="vertical"
+              onValueChange={(v) => { tempo = v; applyTempo(v) }}
+            />
+            <Clock class="mt-2.5" size=16/>
+          </div>
+        </div>
       </div>
-    </div>
-  {/if}
+    {/if}
+  </div>
 </main>
