@@ -21,7 +21,6 @@
     stop: () => void
     togglePause: () => void
     setVol: (v: number) => void
-    setPitch: (p: number) => void
     setTempo: (t: number) => void
     setPos: (p: number) => void
     setRepeatCount: (n: number) => void
@@ -52,7 +51,7 @@
 
   let analyser = $state<AnalyserNode | null>(null)
 
-  const slideIn = (from: number) => () => ({
+  const slideIn = (from: number) => (node: Element) => ({
     css: (t: number) => {
       const x = (1 - t) * from
       const scale = 0.98 + t * 0.02
@@ -110,16 +109,12 @@
   let progressPct = $derived(duration > 0 ? (pos / duration) * 100 : 0)
   let lastProgressUpdate = 0 // not reactive - throttle timestamp
 
-  // pitch: 0–100 → -12 to +12 semitones (50 = no shift)
   // tempo: 0–100 → 0.5× to 2.0× (50 = 1.0×)
   function applyVolume(v: number) { chiptune?.setVol(v / 100) }
-  function applyPitch(v: number) { chiptune?.setPitch(Math.round((v - 50) / 50 * 12)) }
   function applyTempo(v: number) { chiptune?.setTempo(0.5 + (v / 100) * 1.5) }
 
   function resetTransientParams(): void {
-    pitch = DEFAULT_PITCH
     tempo = DEFAULT_TEMPO
-    applyPitch(DEFAULT_PITCH)
     applyTempo(DEFAULT_TEMPO)
   }
 
@@ -143,7 +138,6 @@
         chiptune?.setRepeatCount(0)
         chiptune!.gain.connect(analyser!)
         applyVolume(volume)
-        applyPitch(pitch)
         applyTempo(tempo)
       })
 
@@ -322,6 +316,12 @@
 
       {#if device.isComputer}
       <Button
+        variant="ghost" size="icon" class="rounded-full absolute left-0"
+        onclick={() => activePanel = activePanel === 'settings' ? null : 'settings'}
+      >
+        <Cog size={18} />
+      </Button>
+      <Button
         variant="ghost" size="icon" class="rounded-full absolute right-0"
         onclick={() => activePanel = activePanel === 'audio' ? null : 'audio'}
       >
@@ -363,6 +363,23 @@
             </NativeSelect.Option>
           {/each}
     </NativeSelect.Root>
+  </div>
+
+  <!-- Settings Panel -->
+  <div
+    class="flex overflow-hidden flex-shrink-0 transition-[width] duration-300 ease-out order-first"
+    style:width={activePanel === 'settings' ? '166px' : '0px'}
+  >
+    {#if activePanel === 'settings'}
+      <div
+        class="w-[150px] h-[250px] bg-card text-card-foreground rounded-2xl p-[18px_12px_14px] shadow-lg flex-shrink-0"
+        in:SlideInRight
+        out:SlideInRight
+      >
+        <p class="text-xs text-muted-foreground text-center">Settings</p>
+      </div>
+      <div class="w-4 flex-shrink-0"></div>
+    {/if}
   </div>
 
   <!-- Audio Parameters Panel -->
