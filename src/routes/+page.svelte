@@ -40,11 +40,9 @@
   let playMode = $state<'shuffle' | 'loop' | null>(null) // mutually exclusive
 
   // audio parameter values (0-100)
-  const DEFAULT_PITCH = 50 // die
   const DEFAULT_TEMPO = 50
 
   let volume = $state(80)
-  let pitch = $state(DEFAULT_PITCH) // die
   let tempo = $state(DEFAULT_TEMPO)
 
   let pos = $state(0)
@@ -262,29 +260,6 @@
 
 <main class="min-h-screen flex items-center justify-center bg-background p-8 font-sans">
 
-  <!-- Settings Panel (LEFT) -->
-  <div
-    class="flex overflow-hidden flex-shrink-0 transition-[width] duration-300 ease-out"
-    style:width={activePanel === 'settings' ? '316px' : '0px'}
-  >
-    {#if activePanel === 'settings'}
-      <div
-        class="w-[300px] h-[325px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg flex-shrink-0"
-        in:SlideInRight
-        out:SlideInRight
-      >
-        <h1>"<b>Settings</b>" (not really)</h1>
-        <br />
-        <p>i didnt really think this one out i just wanted something here lol</p>
-
-        <Separator class="my-4" />
-
-        <a href="https://raw.githubusercontent.com/guille7z/keygen.mp3/refs/heads/master/LICENSE">mit licensed</a>
-      </div>
-      <div class="w-4 flex-shrink-0"></div>
-    {/if}
-  </div>
-
   <!-- MAIN PLAYER CARD -->
   <div class="w-[300px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg flex-shrink-0">
     <!-- Song info -->
@@ -390,7 +365,7 @@
     </NativeSelect.Root>
   </div>
 
-  <!-- Audio Parameters Panel (RIGHT) -->
+  <!-- Audio Parameters Panel -->
   <div
     class="flex overflow-hidden flex-shrink-0 transition-[width] duration-300 ease-out"
     style:width={activePanel === 'audio' ? '166px' : '0px'}
@@ -398,7 +373,7 @@
     {#if activePanel === 'audio'}
       <div class="w-4 flex-shrink-0"></div>
       <div
-        class="w-[150px] h-[250px] bg-card text-card-foreground rounded-2xl p-[18px_12px_14px] shadow-lg flex-shrink-0"
+        class="w-[75px] h-[250px] bg-card text-card-foreground rounded-2xl p-[18px_12px_14px] shadow-lg flex-shrink-0"
         in:SlideInLeft
         out:SlideInLeft
       >
@@ -412,16 +387,6 @@
               onValueChange={(v) => { volume = v; applyVolume(v) }}
             />
             <Volume2 class="mt-2.5" size=16/>
-          </div>
-          <div class="flex flex-col items-center justify-between py-1">
-            <Slider
-              type="single"
-              value={tempo}
-              min={0} max={100} step={1}
-              orientation="vertical"
-              onValueChange={(v) => { tempo = v; applyTempo(v) }}
-            />
-            <Clock class="mt-2.5" size=16/>
           </div>
         </div>
       </div>
