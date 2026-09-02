@@ -22,4 +22,4 @@ A (work in progress) music player for Chiptune music from those classic Keygen s
 
 ### AI Notice
 
-AI is used for auditing (ponytail), bug-fixing, and navigating through chiptune.js & the Visualizer's implementations for Svelte.
+AI is used for auditing (ponytail), bug-fixing, navigating through chiptune.js & the Visualizer's implementations for Svelte, and some functionality.
