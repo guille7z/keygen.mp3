@@ -109,7 +109,7 @@
   let progressPct = $derived(duration > 0 ? (pos / duration) * 100 : 0)
   let lastProgressUpdate = 0 // not reactive - throttle timestamp
 
-  // tempo: 0–100 → 0.5× to 2.0× (50 = 1.0×)
+  // tempo: 0-100 -> 0.5x to 2.0x (50 = 1.0x)
   function applyVolume(v: number) { chiptune?.setVol(v / 100) }
   function applyTempo(v: number) { chiptune?.setTempo(0.5 + (v / 100) * 1.5) }
 
