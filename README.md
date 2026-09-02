@@ -3,7 +3,7 @@
 
 A (work in progress) music player for Chiptune music from those classic Keygen software! (Or any music in .mod, .xm, .s3m, .it formats really, I just felt inspired by [keygenmusic.tk](https://keygenmusic.tk/#) and wanted to make my own :'3)
 
-![Hi](.github/pretty.png)
+![Hi](.github/pretty2.png)
 
 ## Notes
 - I'm aware that the UI is... a bit small. On desktops I'd suggest using 140% zoom in the meantime
@@ -22,6 +22,4 @@ A (work in progress) music player for Chiptune music from those classic Keygen s
 
 ### AI Notice
 
-![](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTBRbjOS0SuodkQ7-m4EnqowjHlN-o1RCtZng&s)
-
-This project uses AI in assistance to real human code: for bug-fixing, helping understand undocumented libraries and some assistance with some new additions.
+AI is used for auditing (ponytail), bug-fixing, and navigating through chiptune.js & the Visualizer's implementations for Svelte.
