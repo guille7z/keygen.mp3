@@ -5,6 +5,7 @@
     "": {
       "name": "keygen.mp3",
       "dependencies": {
+        "7.css": "^0.21.1",
         "chiptune3": "^0.8.9",
       },
       "devDependencies": {
@@ -29,6 +30,8 @@
     },
   },
   "packages": {
+    "7.css": ["7.css@0.21.1", "", {}, "sha512-Q+/aFUpGemoR/Zltj4a7yvHonyxfb+9cgiwBL+j/Lm+H28EOoLzWoJki7MdGPV+3mLCvKSCVqr3M2x2uNYyeWw=="],
+
     "@floating-ui/core": ["@floating-ui/core@1.8.0", "", { "dependencies": { "@floating-ui/utils": "^0.2.12" } }, "sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ=="],
 
     "@floating-ui/dom": ["@floating-ui/dom@1.8.0", "", { "dependencies": { "@floating-ui/core": "^1.8.0", "@floating-ui/utils": "^0.2.12" } }, "sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg=="],
