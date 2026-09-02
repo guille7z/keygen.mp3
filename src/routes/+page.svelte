@@ -123,7 +123,7 @@
     showAudioModal = false
 
     try {
-      const chip = await import('https://drsnuggles.github.io/chiptune/chiptune3.min.js')
+      const { ChiptuneJsPlayer } = await import('chiptune3')
 
       const context = new AudioContext()
       const node = context.createAnalyser()
@@ -131,7 +131,7 @@
       node.connect(context.destination)
       analyser = node
 
-      chiptune = new chip.ChiptuneJsPlayer({ context })
+      chiptune = new ChiptuneJsPlayer({ context })
 
       chiptune.onInitialized(() => {
         initialized = true
