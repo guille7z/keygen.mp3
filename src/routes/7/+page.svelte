@@ -1,17 +1,13 @@
 <script lang="ts">
-  import { songs } from '../lib/songs'
+  import { songs } from '../../lib/songs'
   import { onMount } from 'svelte'
   import { fade } from 'svelte/transition'
-  import { Volume2, SkipBack, SkipForward, Play, Pause, ChevronDown, Cog, Shuffle, Repeat, Clock, VolumeX } from '@lucide/svelte'
-  import { Separator } from "$lib/components/ui/separator/index.js"
-  import { Button } from "$lib/components/ui/button/index.js"
-  import { Slider } from "$lib/components/ui/slider/index.js";
-  import * as NativeSelect from "$lib/components/ui/native-select/index.js";
-  import '../app.css'
+  import { Volume2, SkipBack, SkipForward, Play, Pause, Cog, Shuffle, Repeat } from '@lucide/svelte'
+  import '../../app.css'
   import Visualizer from '$lib/components/Visualizer.svelte'
-  import { backInOut, backOut } from "svelte/easing";
+  import { backOut } from 'svelte/easing'
   import { device } from '$lib/device.svelte'
-  import "7.css/dist/7.css";
+  import '7.css/dist/7.scoped.css'
 
   interface ChiptunePlayer {
     onInitialized: (cb: () => void) => void
@@ -33,6 +29,7 @@
   let showAudioModal = $state(true)
   let isLoaded = $state(false)
   let isPaused = $state(false)
+  let isMinimized = $state(false)
   let isDragging = $state(false)
   let activePanel = $state<'settings' | 'audio' | null>(null)
   let playerError = $state<string | null>(null)
@@ -56,11 +53,11 @@
     css: (t: number) => {
       const x = (1 - t) * from
       const scale = 0.98 + t * 0.02
-      return `transform: translateX(${x}px) scale(${scale}); opacity: ${t};`;
+      return `transform: translateX(${x}px) scale(${scale}); opacity: ${t};`
     },
     easing: backOut,
     duration: 300,
-  });
+  })
   const SlideInLeft = slideIn(-20)
   const SlideInRight = slideIn(20)
 
@@ -84,7 +81,11 @@
     return basename(path).split(' - ')[0]
   }
 
-  function buildShuffleOrder(): void { // claude assisted with the whole shuffling thing so yeah. i dont disagree with building a new order (you will eat ze bugs) for the song list so i keep it
+  function displayFullSongName(path: string): string {
+    return basename(path)
+  }
+
+  function buildShuffleOrder(): void {
     const rest = songs.filter(s => s !== selectedSong)
     for (let i = rest.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -107,7 +108,6 @@
 
   let timeElapsed = $derived(fmt(pos))
   let timeLeft = $derived(duration > 0 ? fmt(duration - pos) : '0:00')
-  let progressPct = $derived(duration > 0 ? (pos / duration) * 100 : 0)
   let lastProgressUpdate = 0 // not reactive - throttle timestamp
 
   // tempo: 0-100 -> 0.5x to 2.0x (50 = 1.0x)
@@ -234,180 +234,319 @@
   })
 </script>
 
-<!-- Audio modal -->
+<div class="win7">
+<!-- Audio-enable dialog -->
 {#if showAudioModal}
-  <div class="audio-modal" onclick={onFirstInteraction} out:fade={{ duration: 300 }}>
-    <div class="audio-modal-inner">
-      <Volume2 size={36} color="rgba(255,255,255,0.45)" />
-      <p>click <i>anywhere</i> to enable audio</p>
-    </div>
-  </div>
-{/if}
-
-<!-- Error modal -->
-{#if playerError}
-  <div class="audio-modal">
-    <div class="audio-modal-inner">
-      <p>{playerError}</p>
-    </div>
-  </div>
-{/if}
-
-<main class="min-h-screen flex items-center justify-center bg-background p-8 font-sans">
-
-  <!-- MAIN PLAYER CARD -->
-  <div class="w-[300px] bg-card text-card-foreground rounded-2xl p-[18px_18px_14px] shadow-lg flex-shrink-0">
-    <!-- Song info -->
-    <div class="text-center mb-3.5">
-      <h3 class="text-[0.95rem] font-semibold truncate">
-        {isLoaded ? displayTitle(selectedSong) : '???'}
-      </h3>
-      <p class="text-[0.75rem] text-muted-foreground mt-0.5 truncate">
-        {isLoaded ? displayArtist(selectedSong) : '???'}
-      </p>
-    </div>
-
-    <!-- Visualizer -->
-    <Visualizer {analyser} isPlaying={isLoaded && !isPaused} />
-
-    <!-- Progress bar -->
-    <input
-      type="range"
-      min={0}
-      max={duration || 1}
-      step={0.1}
-      value={pos}
-      oninput={(e) => {
-        isDragging = true
-        pos = (e.target as HTMLInputElement).valueAsNumber
-      }}
-      onpointerup={(e) => {
-        isDragging = false
-        const v = (e.target as HTMLInputElement).valueAsNumber
-        pos = v
-        chiptune?.setPos(v)
-      }}
-      disabled={!initialized || !duration}
-      style:--pct={`${progressPct}%`}
-      class="w-full progress-bar"
-    />
-
-    <div class="flex justify-between mt-1.5 text-[0.7rem] tabular-nums font-mono text-muted-foreground">
-      <span>{timeElapsed}</span>
-      <span>-{timeLeft}</span>
-    </div>
-
-    <!-- Transport -->
-    <div class="relative flex items-center justify-center gap-2 mt-2">
-      <Button variant="ghost" size="icon" class="rounded-full" onclick={prev} disabled={!initialized}>
-        <SkipBack size={18} fill="currentColor" />
-      </Button>
-
-      <Button onclick={() => isLoaded ? togglePause() : load(selectedSong)} size="icon" class="rounded-full w-[46px] h-[46px]" disabled={!initialized}>
-        {#if isPaused || !isLoaded}
-          <Play size={20} fill="currentColor" />
-        {:else}
-          <Pause size={20} fill="currentColor" />
-        {/if}
-      </Button>
-
-      <Button variant="ghost" size="icon" class="rounded-full" onclick={next} disabled={!initialized}>
-        <SkipForward size={18} fill="currentColor" />
-      </Button>
-
-      {#if device.isComputer}
-      <Button
-        variant="ghost" size="icon" class="rounded-full absolute left-0"
-        onclick={() => activePanel = activePanel === 'settings' ? null : 'settings'}
-      >
-        <Cog size={18} />
-      </Button>
-      <Button
-        variant="ghost" size="icon" class="rounded-full absolute right-0"
-        onclick={() => activePanel = activePanel === 'audio' ? null : 'audio'}
-      >
-        <Volume2 size={18} />
-      </Button>
-      {/if}
-    </div>
-
-    <!-- Shuffle / Loop -->
-    <div class="flex items-center justify-center gap-3 mt-3">
-      <Button
-        variant="ghost" size="icon"
-        class="rounded-full w-7 h-7 {playMode === 'shuffle' ? 'text-primary' : 'text-muted-foreground'}"
-        onclick={() => setPlayMode('shuffle')}
-        disabled={!initialized}
-      >
-        <Shuffle size={14} />
-      </Button>
-      <Button
-        variant="ghost" size="icon"
-        class="rounded-full w-7 h-7 {playMode === 'loop' ? 'text-primary' : 'text-muted-foreground'}"
-        onclick={() => setPlayMode('loop')}
-        disabled={!initialized}
-      >
-        <Repeat size={14} />
-      </Button>
-    </div>
-
-    <Separator class="my-4" />
-
-    <NativeSelect.Root
-      bind:value={selectedSong}
-      onchange={() => load(selectedSong)}
-      disabled={!initialized}
+  <div class="scrim" onclick={onFirstInteraction} out:fade={{ duration: 250 }}>
+    <div
+      class="window active is-bright"
+      style="max-width: 300px"
+      role="dialog"
+      aria-labelledby="audio-dialog-title"
     >
-          {#each songs as path}
-            <NativeSelect.Option value={path}>
-              {basename(path)}
-            </NativeSelect.Option>
-          {/each}
-    </NativeSelect.Root>
+      <div class="title-bar">
+        <div class="title-bar-text" id="audio-dialog-title">Audio</div>
+      </div>
+      <div class="window-body has-space" style="text-align: center">
+        <div role="progressbar" class="marquee" style="margin-bottom: 10px"></div>
+        <p>Click anywhere to enable audio playback.</p>
+      </div>
+    </div>
   </div>
+{/if}
 
-  <!-- Settings Panel -->
+<!-- Error dialog -->
+{#if playerError}
+  <div class="scrim">
+    <div
+      class="window active is-bright"
+      style="max-width: 280px"
+      role="dialog"
+      aria-labelledby="error-dialog-title"
+    >
+      <div class="title-bar">
+        <div class="title-bar-text" id="error-dialog-title">Player Error</div>
+        <div class="title-bar-controls">
+          <button aria-label="Close" onclick={() => (playerError = null)}></button>
+        </div>
+      </div>
+      <div class="window-body has-space">
+        <p>{playerError}</p>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<main class="stage">
+  <!-- Settings window -->
   <div
     class="flex overflow-hidden flex-shrink-0 transition-[width] duration-300 ease-out order-first"
-    style:width={activePanel === 'settings' ? '166px' : '0px'}
+    style:width={activePanel === 'settings' ? '178px' : '0px'}
   >
     {#if activePanel === 'settings'}
-      <div
-        class="w-[150px] h-[250px] bg-card text-card-foreground rounded-2xl p-[18px_12px_14px] shadow-lg flex-shrink-0"
-        in:SlideInRight
-        out:SlideInRight
-      >
-        <p class="text-xs text-muted-foreground text-center">Settings</p>
+      <div class="window w-[164px] flex-shrink-0" in:SlideInRight out:SlideInRight>
+        <div class="title-bar">
+          <div class="title-bar-text">Settings</div>
+        </div>
+        <div class="window-body has-space">
+          <fieldset style="margin-top: 10px">
+            <legend>Playback</legend>
+            <div>
+              <input
+                id="shuffle-check" type="checkbox"
+                checked={playMode === 'shuffle'}
+                onchange={() => setPlayMode('shuffle')}
+                disabled={!initialized}
+              />
+              <label for="shuffle-check">Shuffle</label>
+            </div>
+            <div>
+              <input
+                id="loop-check" type="checkbox"
+                checked={playMode === 'loop'}
+                onchange={() => setPlayMode('loop')}
+                disabled={!initialized}
+              />
+              <label for="loop-check">Repeat</label>
+            </div>
+          </fieldset>
+        </div>
       </div>
       <div class="w-4 flex-shrink-0"></div>
     {/if}
   </div>
 
-  <!-- Audio Parameters Panel -->
+  <!-- MAIN PLAYER WINDOW -->
+  <div class="window active glass w-[300px] flex-shrink-0" style:--w7-w-bg={'var(--player-accent, #2f6fed)'}>
+    <div class="title-bar" style="background-attachment: local;">
+      <div class="title-bar-text">{isLoaded ? displayFullSongName(selectedSong) : 'Chiptune Player'}</div>
+    </div>
+
+    {#if !isMinimized}
+      <div class="window-body has-space" transition:fade={{ duration: 150 }}>
+
+        <!-- Visualizer -->
+        <Visualizer {analyser} isPlaying={isLoaded && !isPaused} />
+
+        <!-- Seek bar -->
+        <input
+          type="range"
+          min={0}
+          max={duration || 1}
+          step={0.1}
+          value={pos}
+          oninput={(e) => {
+            isDragging = true
+            pos = (e.target as HTMLInputElement).valueAsNumber
+          }}
+          onpointerup={(e) => {
+            isDragging = false
+            const v = (e.target as HTMLInputElement).valueAsNumber
+            pos = v
+            chiptune?.setPos(v)
+          }}
+          disabled={!initialized || !duration}
+          class="w-full"
+          style="margin-top: 8px"
+        />
+
+        <!-- Transport -->
+        <div class="relative flex items-center justify-center gap-1 mt-3">
+            {#if device.isComputer}
+              <button
+                class="transport-btn absolute left-0 {activePanel === 'settings' ? 'default' : ''}"
+                onclick={() => (activePanel = activePanel === 'settings' ? null : 'settings')}
+                aria-label="Settings"
+              >
+                <Cog size={15} />
+              </button>
+            {/if}
+          <button class="transport-btn" onclick={prev} disabled={!initialized} aria-label="Previous">
+            <SkipBack size={16} fill="currentColor" />
+          </button>
+
+          <button
+            class="transport-btn default"
+            onclick={() => (isLoaded ? togglePause() : load(selectedSong))}
+            disabled={!initialized}
+            aria-label={isPaused || !isLoaded ? 'Play' : 'Pause'}
+          >
+            {#if isPaused || !isLoaded}
+              <Play size={18} fill="currentColor" />
+            {:else}
+              <Pause size={18} fill="currentColor" />
+            {/if}
+          </button>
+
+          <button class="transport-btn" onclick={next} disabled={!initialized} aria-label="Next">
+            <SkipForward size={16} fill="currentColor" />
+          </button>
+
+          {#if device.isComputer}
+          <button
+            class="transport-btn absolute right-0 {activePanel === 'audio' ? 'default' : ''}"
+            onclick={() => (activePanel = activePanel === 'audio' ? null : 'audio')}
+            aria-label="Volume"
+          >
+            <Volume2 size={15} />
+          </button>
+          {/if}
+        </div>
+
+        <!-- Shuffle / Loop -->
+        <div class="flex items-center justify-center gap-2 mt-2">
+          <button
+            class="transport-btn small {playMode === 'shuffle' ? 'default' : ''}"
+            onclick={() => setPlayMode('shuffle')}
+            disabled={!initialized}
+            aria-label="Shuffle"
+            aria-pressed={playMode === 'shuffle'}
+          >
+            <Shuffle size={12} />
+          </button>
+          <button
+            class="transport-btn small {playMode === 'loop' ? 'default' : ''}"
+            onclick={() => setPlayMode('loop')}
+            disabled={!initialized}
+            aria-label="Repeat"
+            aria-pressed={playMode === 'loop'}
+          >
+            <Repeat size={12} />
+          </button>
+        </div>
+
+        <hr class="my-3" />
+
+        <select
+          bind:value={selectedSong}
+          onchange={() => load(selectedSong)}
+          disabled={!initialized}
+          class="w-full"
+        >
+          {#each songs as path}
+            <option value={path}>{basename(path)}</option>
+          {/each}
+        </select>
+      </div>
+
+      <div class="status-bar">
+        <p class="status-bar-field">{timeElapsed}</p>
+        <p class="status-bar-field">{playMode ? (playMode === 'shuffle' ? 'Shuffle' : 'Repeat') : 'In order'}</p>
+        <p class="status-bar-field">-{timeLeft}</p>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Audio window -->
   <div
     class="flex overflow-hidden flex-shrink-0 transition-[width] duration-300 ease-out"
-    style:width={activePanel === 'audio' ? '166px' : '0px'}
+    style:width={activePanel === 'audio' ? '112px' : '0px'}
   >
     {#if activePanel === 'audio'}
       <div class="w-4 flex-shrink-0"></div>
-      <div
-        class="w-[75px] h-[250px] bg-card text-card-foreground rounded-2xl p-[18px_12px_14px] shadow-lg flex-shrink-0"
-        in:SlideInLeft
-        out:SlideInLeft
-      >
-        <div class="flex items-stretch justify-around h-full">
-          <div class="flex flex-col items-center justify-between py-1">
-            <Slider
-              type="single"
-              value={volume}
-              min={0} max={100} step={1}
-              orientation="vertical"
-              onValueChange={(v) => { volume = v; applyVolume(v) }}
-            />
-            <Volume2 class="mt-2.5" size=16/>
+      <div class="window w-[96px] flex-shrink-0" in:SlideInLeft out:SlideInLeft>
+        <div class="title-bar">
+          <div class="title-bar-text">Audio</div>
+        </div>
+        <div class="window-body has-space">
+          <div class="flex flex-col items-center gap-2">
+            <span class="tabular-nums text-[0.7rem]">{volume}</span>
+            <div class="is-vertical h-[130px]">
+              <input
+                type="range"
+                min={0} max={100} step={1}
+                value={volume}
+                oninput={(e) => {
+                  volume = (e.target as HTMLInputElement).valueAsNumber
+                  applyVolume(volume)
+                }}
+                class="has-box-indicator w-[130px]"
+              />
+            </div>
+            <Volume2 size={16} />
           </div>
         </div>
       </div>
     {/if}
   </div>
 </main>
+</div>
+
+<style>
+    .win7 {
+      color: #000;
+    }
+
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: radial-gradient(ellipse at top, #2a72c9 0%, #0b3d78 45%, #071f3e 100%);
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+
+    .scrim {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      display: grid;
+      place-items: center;
+      z-index: 1000;
+      cursor: pointer;
+    }
+
+    .visualizer {
+      width: 100%;
+      height: 64px;
+      --vis-fill: var(--player-accent, #2f6fed);
+      margin-bottom: 4px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Engraved-style horizontal rule to match the 7.css groove aesthetic */
+    hr {
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.35);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      margin: 12px 0;
+    }
+
+    /* Compact icon-only transport buttons, built on top of 7.css's button base */
+    .transport-btn {
+      width: 34px;
+      height: 34px;
+      min-width: 0;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .transport-btn:before,
+    .transport-btn:after {
+      border-radius: 50%;
+    }
+
+    .transport-btn.default {
+      width: 42px;
+      height: 42px;
+    }
+
+    .transport-btn.small {
+      width: 24px;
+      height: 24px;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+</style>
